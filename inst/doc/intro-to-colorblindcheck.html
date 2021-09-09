@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+<meta name="author" content="Jakub Nowosad" />
+
+<meta name="date" content="2021-09-07" />
+
+<title>colorblindcheck: Check Color Palettes for Problems with Color Vision Deficiency</title>
+
+<script>// Pandoc 2.9 adds attributes on both header and div. We remove the former (to
+// be compatible with the behavior of Pandoc < 2.8).
+document.addEventListener('DOMContentLoaded', function(e) {
+  var hs = document.querySelectorAll("div.section[class*='level'] > :first-child");
+  var i, h, a;
+  for (i = 0; i < hs.length; i++) {
+    h = hs[i];
+    if (!/^h[1-6]$/i.test(h.tagName)) continue;  // it should be a header h1-h6
+    a = h.attributes;
+    while (a.length > 0) h.removeAttribute(a[0].name);
+  }
+});
+</script>
+<script>// Hide empty <a> tag within highlighted CodeBlock for screen reader accessibility (see https://github.com/jgm/pandoc/issues/6352#issuecomment-626106786) -->
+// v0.0.1
+// Written by JooYoung Seo (jooyoung@psu.edu) and Atsushi Yasumoto on June 1st, 2020.
+
+document.addEventListener('DOMContentLoaded', function() {
+  const codeList = document.getElementsByClassName("sourceCode");
+  for (var i = 0; i < codeList.length; i++) {
+    var linkList = codeList[i].getElementsByTagName('a');
+    for (var j = 0; j < linkList.length; j++) {
+      if (linkList[j].innerHTML === "") {
+        linkList[j].setAttribute('aria-hidden', 'true');
+      }
+    }
+  }
+});
+</script>
+
+<style type="text/css">
+  code{white-space: pre-wrap;}
+  span.smallcaps{font-variant: small-caps;}
+  span.underline{text-decoration: underline;}
+  div.column{display: inline-block; vertical-align: top; width: 50%;}
+  div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+  ul.task-list{list-style: none;}
+    </style>
+
+
+<style type="text/css">
+  code {
+    white-space: pre;
+  }
+  .sourceCode {
+    overflow: visible;
+  }
+</style>
+<style type="text/css" data-origin="pandoc">
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+    color: #aaaaaa;
+  }
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+code span.at { color: #7d9029; } /* Attribute */
+code span.bn { color: #40a070; } /* BaseN */
+code span.bu { } /* BuiltIn */
+code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+code span.ch { color: #4070a0; } /* Char */
+code span.cn { color: #880000; } /* Constant */
+code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+code span.dt { color: #902000; } /* DataType */
+code span.dv { color: #40a070; } /* DecVal */
+code span.er { color: #ff0000; font-weight: bold; } /* Error */
+code span.ex { } /* Extension */
+code span.fl { color: #40a070; } /* Float */
+code span.fu { color: #06287e; } /* Function */
+code span.im { } /* Import */
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+code span.op { color: #666666; } /* Operator */
+code span.ot { color: #007020; } /* Other */
+code span.pp { color: #bc7a00; } /* Preprocessor */
+code span.sc { color: #4070a0; } /* SpecialChar */
+code span.ss { color: #bb6688; } /* SpecialString */
+code span.st { color: #4070a0; } /* String */
+code span.va { color: #19177c; } /* Variable */
+code span.vs { color: #4070a0; } /* VerbatimString */
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+
+</style>
+<script>
+// apply pandoc div.sourceCode style to pre.sourceCode instead
+(function() {
+  var sheets = document.styleSheets;
+  for (var i = 0; i < sheets.length; i++) {
+    if (sheets[i].ownerNode.dataset["origin"] !== "pandoc") continue;
+    try { var rules = sheets[i].cssRules; } catch (e) { continue; }
+    for (var j = 0; j < rules.length; j++) {
+      var rule = rules[j];
+      // check if there is a div.sourceCode rule
+      if (rule.type !== rule.STYLE_RULE || rule.selectorText !== "div.sourceCode") continue;
+      var style = rule.style.cssText;
+      // check if color or background-color is set
+      if (rule.style.color === '' && rule.style.backgroundColor === '') continue;
+      // replace div.sourceCode by a pre.sourceCode rule
+      sheets[i].deleteRule(j);
+      sheets[i].insertRule('pre.sourceCode{' + style + '}', j);
+    }
+  }
+})();
+</script>
+
+
+
+
+<style type="text/css">body {
+background-color: #fff;
+margin: 1em auto;
+max-width: 700px;
+overflow: visible;
+padding-left: 2em;
+padding-right: 2em;
+font-family: "Open Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+font-size: 14px;
+line-height: 1.35;
+}
+#TOC {
+clear: both;
+margin: 0 0 10px 10px;
+padding: 4px;
+width: 400px;
+border: 1px solid #CCCCCC;
+border-radius: 5px;
+background-color: #f6f6f6;
+font-size: 13px;
+line-height: 1.3;
+}
+#TOC .toctitle {
+font-weight: bold;
+font-size: 15px;
+margin-left: 5px;
+}
+#TOC ul {
+padding-left: 40px;
+margin-left: -1.5em;
+margin-top: 5px;
+margin-bottom: 5px;
+}
+#TOC ul ul {
+margin-left: -2em;
+}
+#TOC li {
+line-height: 16px;
+}
+table {
+margin: 1em auto;
+border-width: 1px;
+border-color: #DDDDDD;
+border-style: outset;
+border-collapse: collapse;
+}
+table th {
+border-width: 2px;
+padding: 5px;
+border-style: inset;
+}
+table td {
+border-width: 1px;
+border-style: inset;
+line-height: 18px;
+padding: 5px 5px;
+}
+table, table th, table td {
+border-left-style: none;
+border-right-style: none;
+}
+table thead, table tr.even {
+background-color: #f7f7f7;
+}
+p {
+margin: 0.5em 0;
+}
+blockquote {
+background-color: #f6f6f6;
+padding: 0.25em 0.75em;
+}
+hr {
+border-style: solid;
+border: none;
+border-top: 1px solid #777;
+margin: 28px 0;
+}
+dl {
+margin-left: 0;
+}
+dl dd {
+margin-bottom: 13px;
+margin-left: 13px;
+}
+dl dt {
+font-weight: bold;
+}
+ul {
+margin-top: 0;
+}
+ul li {
+list-style: circle outside;
+}
+ul ul {
+margin-bottom: 0;
+}
+pre, code {
+background-color: #f7f7f7;
+border-radius: 3px;
+color: #333;
+white-space: pre-wrap; 
+}
+pre {
+border-radius: 3px;
+margin: 5px 0px 10px 0px;
+padding: 10px;
+}
+pre:not([class]) {
+background-color: #f7f7f7;
+}
+code {
+font-family: Consolas, Monaco, 'Courier New', monospace;
+font-size: 85%;
+}
+p > code, li > code {
+padding: 2px 0px;
+}
+div.figure {
+text-align: center;
+}
+img {
+background-color: #FFFFFF;
+padding: 2px;
+border: 1px solid #DDDDDD;
+border-radius: 3px;
+border: 1px solid #CCCCCC;
+margin: 0 5px;
+}
+h1 {
+margin-top: 0;
+font-size: 35px;
+line-height: 40px;
+}
+h2 {
+border-bottom: 4px solid #f7f7f7;
+padding-top: 10px;
+padding-bottom: 2px;
+font-size: 145%;
+}
+h3 {
+border-bottom: 2px solid #f7f7f7;
+padding-top: 10px;
+font-size: 120%;
+}
+h4 {
+border-bottom: 1px solid #f7f7f7;
+margin-left: 8px;
+font-size: 105%;
+}
+h5, h6 {
+border-bottom: 1px solid #ccc;
+font-size: 105%;
+}
+a {
+color: #0033dd;
+text-decoration: none;
+}
+a:hover {
+color: #6666ff; }
+a:visited {
+color: #800080; }
+a:visited:hover {
+color: #BB00BB; }
+a[href^="http:"] {
+text-decoration: underline; }
+a[href^="https:"] {
+text-decoration: underline; }
+
+code > span.kw { color: #555; font-weight: bold; } 
+code > span.dt { color: #902000; } 
+code > span.dv { color: #40a070; } 
+code > span.bn { color: #d14; } 
+code > span.fl { color: #d14; } 
+code > span.ch { color: #d14; } 
+code > span.st { color: #d14; } 
+code > span.co { color: #888888; font-style: italic; } 
+code > span.ot { color: #007020; } 
+code > span.al { color: #ff0000; font-weight: bold; } 
+code > span.fu { color: #900; font-weight: bold; } 
+code > span.er { color: #a61717; background-color: #e3d2d2; } 
+</style>
+
+
+
+
+</head>
+
+<body>
+
+
+
+
+<h1 class="title toc-ignore">colorblindcheck: Check Color Palettes for Problems with Color Vision Deficiency</h1>
+<h4 class="author">Jakub Nowosad</h4>
+<h4 class="date">2021-09-07</h4>
+
+
+
+<p>Deciding if a color palette is a colorblind friendly is a hard task. This cannot be done in an entirely automatic fashion, as the decision needs to be confirmed by visual judgments. The goal of <strong>colorblindcheck</strong> is to provide tools to decide if the selected color palette is colorblind friendly, including:</p>
+<ul>
+<li><code>palette_dist()</code> - Calculation of the distances between the colors in the input palette and between the colors in simulations of the color vision deficiencies - deuteranopia, protanopia, and tritanopia.</li>
+<li><code>palette_plot()</code> - Plotting of the original input palette and simulations of color vision deficiencies - deuteranopia, protanopia, and tritanopia.</li>
+<li><code>palette_check()</code> - Creating summary statistics comparing the original input palette and simulations of color vision deficiencies - deuteranopia, protanopia, and tritanopia.</li>
+</ul>
+<p>The work in this package was inspired by a blog post <a href="https://www.vis4.net/blog/2018/02/automate-colorblind-checking/">I wrote some code that automatically checks visualizations for non-colorblind safe colors. Here’s how it works</a> by <a href="https://twitter.com/driven_by_data">Gregor Aisch</a>.</p>
+<div id="example" class="section level2">
+<h2>Example</h2>
+<p>The <strong>colorblindcheck</strong> accepts a vector of hexadecimal color descriptions as the input. It can be created using different existing R functions (e.g. <code>rainbow()</code>) or packages (e.g. <a href="https://cran.r-project.org/package=colorspace"><strong>colorspace</strong></a>, <a href="https://cran.r-project.org/package=RColorBrewer"><strong>RColorBrewer</strong></a>, <a href="https://cran.r-project.org/package=rcartocolor"><strong>rcartocolor</strong></a>, etc.).</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true"></a><span class="kw">library</span>(colorblindcheck)</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true"></a>rainbow_pal =<span class="st"> </span><span class="kw">rainbow</span>(<span class="dt">n =</span> <span class="dv">7</span>)</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true"></a>rainbow_pal</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true"></a><span class="co">#&gt; [1] &quot;#FF0000&quot; &quot;#FFDB00&quot; &quot;#49FF00&quot; &quot;#00FF92&quot; &quot;#0092FF&quot; &quot;#4900FF&quot; &quot;#FF00DB&quot;</span></span></code></pre></div>
+<p>The primary function in this package is <code>palette_check()</code>, which creates a summary comparison between the original input palette and simulations of color vision deficiencies - deuteranopia, protanopia, and tritanopia.</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true"></a><span class="kw">palette_check</span>(rainbow_pal, <span class="dt">plot =</span> <span class="ot">TRUE</span>)</span></code></pre></div>
+<p><img src="data:image/png;base64,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RamtrXW/NzEx8bXXXrNYLIqiHD9+fM6cObfeeutlejh06JCiKAcPHnzwwQdvu+02IYTZbH7wwQe7d+9uNBpvu+22TZs2qS3NZrOiKNu2bUtOTjYYDHFxcYsXL3aPe/bs2alTp/bu3Ts6Onrs2LGHDh1SjxcUFPTv33/t2rVhYWH+/v7p6enbtm1TX/rmm2/afoV4qXEBAN7p4tNSx4wZY7PZKisr1d1f/vKXb7/99vz58999992goKBRo0Z99dVXl+nUz8/v5MmTcXFxL7zwwvbt2zvsYcqUKYmJiW+++abFYhkxYoTZbH7hhRfefvvtuLi48ePHHz16tG3LyZMnFxcX33fffS+99NLGjRuFEE6n02Qybd++/fnnn1+9enVjY+PQoUN/+OEH9S01NTUzZsxYtGjRX/7yl7i4uOzs7M8//7xdwR2OCwDwNhf/Iq5Hjx5CiJqamoyMjD179mzatOnLL7/MzMwUQtx3332DBw/+/e9///7771+m327duun1+pCQkMjIyA57GDZs2GuvvSaEOHLkyIABA1588cWf/OQnQojMzMz4+PiKiopevXqpLXNycpYsWSKEyMjI+OCDD77++utf/OIXGzZsOHDgwDfffHPTTTcJIcaOHdu7d+/c3Ny8vDwhhMVieeONN379618LIe6//37129FRo0a1rfbkyZMXHTcpKanzHy0A4Hq6eIC1vVZUUlISHR2dmprq/kbxjjvu+PTTT698jA57GDt2rLrRu3fvzz77TAhRX19fVVWlfo/ndDrdLe+99151w9fXNzExUV1pd+/evampqWp6CSECAgKysrL27dvnfteECRPcP9fEiROffvrpdhV2OC4AwNtcPMDUKYjqs48PHz5cV1cXHR3dtkFERMSVj9FhD926dXNv5+fnL1269MSJE4mJie7nI19+3B9++CE2Nrbtkfj4+OLiYnXbx8cnMvJft2326NGjpaXFHaVXOC4AwNtc/BrYZ599ZjAY+vXrJ4SIjo4eMGCA69/9ZwCoLnoDWYc9uFeI2bp168yZM5977rnGxsaqqqp33nmnXVcXfTZBfHz8qVP/tljGqVOn4uLi1G273d52rBMnTvj5+YWHh7dt3+G4AABvc5EA+/7771etWvXoo4+qpztDhw49dOiQe0KH3W7PyspatGiR+GfwVFdXqy+VlpZeNMAu00M7u3btio+P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7nW3HDVqlHt79OjRmzdvdjgcHo0LAPA2XXoGFh4efvkGFy5cmDBhQmpqal5e3vfff//www+3a3DRs7eGhobg4OC2R8LCwtwTMXx8fAIDA90vRURE2O32hoZ/ex5Sh+MCALxNl56BdbiU2YYNG7Zs2VJeXp6amiqEaGlpmTVrVofdJiQktLuNzGw2JyYmqtt2u/3IkSMJCQnqbmVlZXBwcERERNtvCDs3LgBAQ96yEoc6M7CysjIwMDApKUk9uG3bNiFEh08sGz169LFjxzZt2qTu1tTUFBUV3X333e4Gy5cvVzfOnTuXn59/zz3tn1bcuXEBABryimXcwsPDN2zYEBMTM2bMmJdffjkrK+vOO+8sLy/fv39/cHDwmjVrbr755su8fcSIERMnTpwwYcKkSZOMRuN7772XnJysTsQQQhgMhg8++MBsNqekpBQVFTU2Nqrz9du61LizZ89OuE4/MwDg6lyvMzCDwWAymeLj49XdwMBAk8nkvoJlNBpNJlNAQIC6m5eXFx8fv3///uHDh3/00UeRkZG7d+++6aabysrKVq1aZbFY6urqAgICTCZT22tdQ4YM6dOnj7pdWFiYn59vsViOHTs2f/78PXv2uDv38/Pbt2/fwIEDq6qqHnjggbKyMvV7wrY1XGpc7mgGAK+l3NhflBUUFMyZM+f8+fOde3tlZWXCPaNZjb4LVPS4fUHk96xGf72pq9GPMB/VuhDPbEvssXVVEavRd4GaN2bGPDRalsepeMs1MAAAPHKDB5jRaOzVq5fWVQAArr0bPMDGjx9fUVGhdRUAgGvvBg8wAMCNSqbrz5qonzJZ39iodRUeaE3pp/gaT4UmaF2IZ1xCjLkQ4ergTnfvEu70ub3JYXRqXYcnQh2uQJ1ubnSE1oV4Jkyv/0nm4O49Y7QuxAPxPaPt0aGnZmVrXYhnrN1lekTiDT4L8So1NDRYrVatq/CMw+FwOp0Gg0HrQjxjsVjaPptNCuqT53x8JPsrUMaP2maz6XQ6vV6vdSEecLlcVqtVuo9aUZTw8HBZPmoCDAAgJa6BAQCkRIABAKREgAEApESAAQCkRIABAKREgAEApESAAQCkRIABAKREgAEApESAAQCkRIABAKREgAEApESAAQCkRIABAKREgAEApESAAQCkRIABAKREgAEApESAAQCkRIABAKREgAEApESAAQCkRIABAKREgAEApESAAQCkRIABAKREgAEApESAAQCkRIABAKREgAEApESAAQCkRIABAKREgAEApESAAQCkRIABAKREgAEApESAAQCkRIABAKREgAEApESAAQCkRIABAKREgAEApESAAQCkRIABAKREgAEApESAAQCkRIABAKREgAEApESAAQCkRIABAKREgAEApESAAQCkRIABAKREgGKGgKoAAADwSURBVAEApESAAQCkRIABAKREgAEApESAAQCkRIABAKREgAEApESAAQCkRIABAKREgAEApESAAQCkRIABAKREgAEApESAAQCkRIABAKREgAEApESAAQCkRIABAKREgAEApESAAQCkRIABAKREgAEApESAAQCkRIABAKREgAEApESAAQCkRIABAKREgAEApESAAQCkRIABAKREgAEApESAAQCkRIABAKREgAEApESAAQCkRIABAKREgAEApESAAQCkRIABAKREgAEApESAAQCkRIABAKREgAEApESAAQCkRIABAKREgAEApESAAQCk9P8Alw2Hoi0cOPgAAAAASUVORK5CYII=" /><!-- --></p>
+<pre><code>#&gt;           name n tolerance ncp ndcp  min_dist mean_dist  max_dist
+#&gt; 1       normal 7  12.13226  21   21 12.132257  61.06471 107.63470
+#&gt; 2 deuteranopia 7  12.13226  21   18  7.725825  50.11732  91.56339
+#&gt; 3   protanopia 7  12.13226  21   19  2.355309  55.41310  88.34820
+#&gt; 4   tritanopia 7  12.13226  21   19  8.216194  51.53678  83.10000</code></pre>
+<p>The <code>palette_check()</code> function returns a data.frame with 4 observations and 8 variables:</p>
+<ul>
+<li><code>name</code>: original input color palette (normal), deuteranopia, protanopia, and tritanopia</li>
+<li><code>n</code>: number of colors</li>
+<li><code>tolerance</code>: minimal value of the acceptable difference between the colors to distinguish between them</li>
+<li><code>ncp</code>: number of color pairs</li>
+<li><code>ndcp</code>: number of differentiable color pairs (color pairs with distances above the tolerance value)</li>
+<li><code>min_dist</code>: minimal distance between colors</li>
+<li><code>mean_dist</code>: average distance between colors</li>
+<li><code>max_dist</code>: maximal distance between colors</li>
+</ul>
+<p>Additionally, a plot comparing the original input palette and simulations of color vision deficiencies - deuteranopia, protanopia, and tritanopia can be shown. This help to decide if the selected color palette is colorblind friendly.</p>
+<p>For example, the above output shows that the minimal distance between colors in the input palette is about 12; however, the minimum distance between colors simulation of protanopia is only about 2. It can suggest that some colors in this palette would not be distinguishable by people with protanopia.</p>
+<p>The <code>palette_dist()</code> function calculates distances between the colors in the input palette, as well as in a simulation of the selected color vision deficiency - deuteranopia, protanopia, and tritanopia. It allows finding which colors are the most or the least similar and to compare the behavior of color palettes for different color vision deficiencies. In the original <code>rainbow_pal</code> object, the closest colors were the third and the fourth one (a distance of about 12); however, the deuteranopia version has a minimal distance of 2 between the second and third color.</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true"></a><span class="co"># normal</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true"></a><span class="kw">palette_dist</span>(rainbow_pal)</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true"></a><span class="co">#&gt;      [,1]     [,2]     [,3]     [,4]     [,5]     [,6]      [,7]</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true"></a><span class="co">#&gt; [1,]   NA 52.96503 85.06611 84.19100 52.61836 51.46782  39.46279</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true"></a><span class="co">#&gt; [2,]   NA       NA 29.34232 34.74051 65.68745 92.04784  80.83188</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true"></a><span class="co">#&gt; [3,]   NA       NA       NA 12.13226 69.12782 81.23889 107.63470</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true"></a><span class="co">#&gt; [4,]   NA       NA       NA       NA 56.87222 74.19228 103.11485</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true"></a><span class="co">#&gt; [5,]   NA       NA       NA       NA       NA 35.47760  44.20031</span></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true"></a><span class="co">#&gt; [6,]   NA       NA       NA       NA       NA       NA  29.94683</span></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true"></a><span class="co">#&gt; [7,]   NA       NA       NA       NA       NA       NA        NA</span></span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true"></a><span class="co"># deuteranopia</span></span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true"></a><span class="kw">palette_dist</span>(rainbow_pal, <span class="dt">cvd =</span> <span class="st">&quot;pro&quot;</span>)</span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true"></a><span class="co">#&gt;      [,1]     [,2]      [,3]     [,4]     [,5]     [,6]      [,7]</span></span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true"></a><span class="co">#&gt; [1,]   NA 73.78789 76.166629 75.13412 58.36222 52.03797 50.317457</span></span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true"></a><span class="co">#&gt; [2,]   NA       NA  2.355309 12.76751 64.91260 86.33061 84.667281</span></span>
+<span id="cb4-16"><a href="#cb4-16" aria-hidden="true"></a><span class="co">#&gt; [3,]   NA       NA        NA 12.48830 66.28036 88.34820 86.569277</span></span>
+<span id="cb4-17"><a href="#cb4-17" aria-hidden="true"></a><span class="co">#&gt; [4,]   NA       NA        NA       NA 56.80334 77.98335 76.869176</span></span>
+<span id="cb4-18"><a href="#cb4-18" aria-hidden="true"></a><span class="co">#&gt; [5,]   NA       NA        NA       NA       NA 29.43598 28.504135</span></span>
+<span id="cb4-19"><a href="#cb4-19" aria-hidden="true"></a><span class="co">#&gt; [6,]   NA       NA        NA       NA       NA       NA  3.553296</span></span>
+<span id="cb4-20"><a href="#cb4-20" aria-hidden="true"></a><span class="co">#&gt; [7,]   NA       NA        NA       NA       NA       NA        NA</span></span></code></pre></div>
+</div>
+
+
+
+<!-- code folding -->
+
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>
